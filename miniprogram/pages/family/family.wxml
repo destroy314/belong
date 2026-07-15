@@ -1,0 +1,264 @@
+<navigation-bar title="家庭" color="#1f2321" background="#f5f5f3"></navigation-bar>
+
+<scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+  <view wx:if="{{loading}}" class="loading-state">
+    <view class="loading-hero"></view>
+    <view class="loading-card"></view>
+    <view class="loading-card short"></view>
+  </view>
+
+  <view wx:else class="content safe-bottom">
+    <block wx:if="{{currentFamily}}">
+      <view class="family-hero">
+        <view class="home-mark">⌂</view>
+        <view class="hero-copy">
+          <text class="family-name">{{currentFamily.name}}</text>
+          <text class="role-label">{{currentRoleLabel}} · {{members.length}} 位成员</text>
+        </view>
+      </view>
+
+      <scroll-view wx:if="{{families.length > 1}}" class="family-switcher" scroll-x show-scrollbar="{{false}}">
+        <view class="family-pills">
+          <view
+            wx:for="{{families}}"
+            wx:key="id"
+            class="family-pill {{item.id === currentFamily.id ? 'active' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="switchFamily"
+          >{{item.name}}</view>
+        </view>
+      </scroll-view>
+
+      <view class="section-card invite-card" bindtap="copyInviteCode" hover-class="card-active">
+        <view>
+          <text class="section-kicker">家庭邀请码</text>
+          <text class="invite-code" user-select>{{currentFamily.inviteCode}}</text>
+        </view>
+        <view class="copy-action">复制</view>
+      </view>
+
+      <view class="section-block">
+        <view class="section-heading">
+          <text class="section-title">家庭成员</text>
+          <text class="section-count">{{members.length}}</text>
+        </view>
+        <view class="section-card member-list">
+          <view wx:for="{{members}}" wx:key="userId" class="member-row {{item.isCurrentUser ? 'current-member' : ''}}">
+            <image wx:if="{{item.avatarUrl}}" class="member-avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+            <view wx:else class="member-avatar member-initial">{{item.initial}}</view>
+            <view class="member-copy">
+              <text class="member-name">{{item.nickname}}</text>
+              <text class="member-role">{{item.roleLabel}}</text>
+            </view>
+            <button
+              wx:if="{{item.isCurrentUser}}"
+              class="member-edit-button"
+              bindtap="openProfileSettings"
+            >编辑</button>
+            <button
+              wx:if="{{canManageMembers && item.role !== 'owner'}}"
+              class="member-remove-button"
+              data-id="{{item.userId}}"
+              loading="{{removingMemberId === item.userId}}"
+              disabled="{{removingMemberId}}"
+              bindtap="removeMember"
+            >移除</button>
+          </view>
+        </view>
+      </view>
+
+      <view class="section-block">
+        <view class="section-heading">
+          <text class="section-title">模型服务</text>
+        </view>
+        <view class="section-card config-card">
+          <text class="config-description">使用 OpenAI-compatible 接口。密钥只会提交到家庭后端并加密保存。</text>
+          <view wx:if="{{usingDefaultConfig}}" class="default-config-note">
+            当前使用服务端默认配置。若要改为家庭专属配置，请填写新的 API Key 后保存。
+          </view>
+
+          <view class="field">
+            <text class="field-label">API 地址</text>
+            <input
+              class="field-input"
+              value="{{baseUrlInput}}"
+              disabled="{{!canEditConfig}}"
+              placeholder="https://api.example.com/v1"
+              placeholder-class="field-placeholder"
+              bindinput="handleBaseUrl"
+            />
+          </view>
+          <view class="field">
+            <text class="field-label">模型名称</text>
+            <input
+              class="field-input"
+              value="{{modelInput}}"
+              disabled="{{!canEditConfig}}"
+              placeholder="例如 deepseek-chat"
+              placeholder-class="field-placeholder"
+              bindinput="handleModel"
+            />
+          </view>
+          <view class="field">
+            <view class="field-label-row">
+              <text class="field-label">API Key</text>
+              <text wx:if="{{hasApiKey}}" class="secret-saved">已安全保存</text>
+            </view>
+            <input
+              class="field-input"
+              value="{{apiKeyInput}}"
+              password
+              disabled="{{!canEditConfig}}"
+              placeholder="{{hasApiKey ? '留空表示不修改' : '覆盖配置需输入 API Key'}}"
+              placeholder-class="field-placeholder"
+              bindinput="handleApiKey"
+            />
+          </view>
+
+          <button
+            wx:if="{{canEditConfig}}"
+            class="save-button"
+            loading="{{savingConfig}}"
+            disabled="{{savingConfig}}"
+            bindtap="saveLlmConfig"
+          >保存模型设置</button>
+          <text wx:else class="permission-note">只有家庭创建者或管理员可以修改模型设置。</text>
+        </view>
+      </view>
+
+      <button class="secondary-button" bindtap="toggleFamilyForm">
+        {{showFamilyForm ? '收起' : '创建或加入另一个家庭'}}
+      </button>
+
+      <view class="danger-zone">
+        <button
+          wx:if="{{canManageMembers}}"
+          class="danger-button"
+          loading="{{deletingFamily}}"
+          disabled="{{deletingFamily}}"
+          bindtap="deleteCurrentFamily"
+        >删除家庭</button>
+        <button
+          wx:else
+          class="leave-button"
+          loading="{{leavingFamily}}"
+          disabled="{{leavingFamily}}"
+          bindtap="exitFamily"
+        >退出家庭</button>
+      </view>
+
+    </block>
+
+    <view wx:if="{{showFamilyForm}}" class="family-form-wrap {{currentFamily ? 'with-family' : ''}}">
+      <view wx:if="{{!currentFamily}}" class="intro">
+        <text class="intro-eyebrow">开始使用</text>
+        <text class="intro-title">和家人共享每件物品的位置</text>
+        <text class="intro-copy">创建新的家庭空间，或通过家人分享的邀请码加入。</text>
+      </view>
+
+      <view class="mode-switch">
+        <view
+          class="mode-option {{formMode === 'create' ? 'active' : ''}}"
+          data-mode="create"
+          bindtap="setFormMode"
+        >创建家庭</view>
+        <view
+          class="mode-option {{formMode === 'join' ? 'active' : ''}}"
+          data-mode="join"
+          bindtap="setFormMode"
+        >邀请码加入</view>
+      </view>
+
+      <view class="section-card create-card">
+        <block wx:if="{{formMode === 'create'}}">
+          <text class="form-title">给家庭起个名字</text>
+          <text class="form-hint">例如「我们家」或「外婆家」</text>
+          <input
+            class="large-input"
+            value="{{familyNameInput}}"
+            maxlength="24"
+            placeholder="家庭名称"
+            placeholder-class="field-placeholder"
+            bindinput="handleFamilyName"
+          />
+        </block>
+        <block wx:else>
+          <text class="form-title">输入家庭邀请码</text>
+          <text class="form-hint">向家庭创建者获取邀请码</text>
+          <input
+            class="large-input code-input"
+            value="{{inviteCodeInput}}"
+            maxlength="12"
+            placeholder="例如 A7K9P2"
+            placeholder-class="field-placeholder"
+            bindinput="handleInviteCode"
+          />
+        </block>
+        <button
+          class="save-button"
+          loading="{{submitting}}"
+          disabled="{{submitting}}"
+          bindtap="submitFamilyForm"
+        >{{formMode === 'create' ? '创建家庭' : '加入家庭'}}</button>
+      </view>
+    </view>
+
+  </view>
+</scroll-view>
+
+<view
+  wx:if="{{showProfileSettings}}"
+  class="profile-modal-mask"
+  bindtap="closeProfileSettings"
+>
+  <view class="profile-modal" catchtap="preventProfileSettingsClose">
+    <view class="profile-modal-heading">
+      <text class="profile-modal-title">编辑我的资料</text>
+      <text class="profile-modal-close" bindtap="closeProfileSettings">取消</text>
+    </view>
+    <text class="profile-modal-hint">点击头像选择微信头像；填写昵称时可从键盘建议中选取</text>
+    <form class="profile-form" bindsubmit="saveProfile">
+      <view class="profile-modal-user">
+        <button
+          class="profile-avatar-picker"
+          open-type="chooseAvatar"
+          loading="{{uploadingAvatar}}"
+          disabled="{{savingProfile || uploadingAvatar}}"
+          bindchooseavatar="chooseAvatar"
+        >
+          <image wx:if="{{currentUser.avatarUrl}}" class="profile-avatar" src="{{currentUser.avatarUrl}}" mode="aspectFill"></image>
+          <view wx:else class="profile-avatar profile-initial">{{profileInitial}}</view>
+        </button>
+        <view class="profile-name-field">
+          <input
+            class="field-input"
+            name="nickname"
+            type="nickname"
+            value="{{profileNicknameInput}}"
+            maxlength="10"
+            disabled="{{savingProfile || uploadingAvatar}}"
+            placeholder="输入昵称"
+            placeholder-class="field-placeholder"
+            bindinput="handleProfileNickname"
+          />
+        </view>
+      </view>
+      <view class="profile-actions">
+        <button
+          class="profile-action-button profile-save-button"
+          size="mini"
+          form-type="submit"
+          loading="{{savingProfile}}"
+          disabled="{{savingProfile || uploadingAvatar}}"
+        >保存资料</button>
+      </view>
+    </form>
+  </view>
+</view>
+
+<view
+  wx:if="{{showDevelopmentTools}}"
+  class="dev-session-reset"
+  bindtap="switchToDevelopmentOwner"
+  hover-class="tap-active"
+>{{switchingDevOwner ? '开发：正在切换账号' : '开发：以 belong-dev-owner 登录'}}</view>

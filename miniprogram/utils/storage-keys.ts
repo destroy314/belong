@@ -1,0 +1,5 @@
+export const TOKEN_STORAGE_KEY = 'belong_token'
+export const USER_STORAGE_KEY = 'belong_user'
+export const FAMILY_STORAGE_KEY = 'belong_family_id'
+export const CHAT_CACHE_PREFIX = 'belong_chat_'
+export const LAST_CHAT_CACHE_KEY = 'belong_last_chat_cache_key'

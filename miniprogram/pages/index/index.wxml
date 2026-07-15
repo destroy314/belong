@@ -1,0 +1,165 @@
+<page-meta page-style="height: 100%; overflow: hidden; background: #f5f5f3;"></page-meta>
+
+<view class="chat-page">
+  <view id="top-guard" class="top-guard" catchtouchmove="preventAreaMove">
+    <navigation-bar
+      title="物归"
+      back="{{false}}"
+      color="#1f2321"
+      background="#f5f5f3"
+    >
+      <view slot="left" class="nav-action" bindtap="openFamily" aria-label="家庭设置">
+        <view class="settings-icon" aria-hidden="true"></view>
+      </view>
+    </navigation-bar>
+
+    <view class="context-bar">
+      <view class="family-context">
+        <view class="family-dot"></view>
+        <text>{{familyName || '还没有家庭'}}</text>
+      </view>
+      <view class="inventory-link" bindtap="openInventory" hover-class="tap-active">
+        <text>查看库存</text>
+        <text class="chevron">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view
+    wx:if="{{canManuallyResetChat && familyId}}"
+    class="dev-session-reset"
+    bindtap="resetDevelopmentChat"
+    hover-class="tap-active"
+  >开发：手动重置会话</view>
+
+  <view
+    class="list-host"
+    style="top: {{topHeight}}px; bottom: {{composerHeight + composerBottom}}px;"
+  >
+    <scroll-view
+      id="chat-scroll"
+      class="chat-scroll"
+      scroll-y
+      enhanced
+      bounces="{{true}}"
+      refresher-enabled="{{false}}"
+      scroll-anchoring="{{true}}"
+      show-scrollbar="{{false}}"
+      scroll-with-animation="{{scrollAnimated}}"
+      scroll-into-view="{{scrollIntoView}}"
+      bindscroll="handleChatScroll"
+    >
+      <view class="chat-scroll-content">
+        <view wx:if="{{loading}}" class="loading-state">
+          <view class="loading-dot"></view>
+          <text>正在准备你的家庭库存</text>
+        </view>
+
+        <view wx:elif="{{!familyId}}" class="empty-family">
+          <view class="empty-mark">⌂</view>
+          <text class="empty-title">先建立一个家庭空间</text>
+          <text class="empty-copy">创建家庭或使用邀请码加入后，就可以一起记录物品放在哪里。</text>
+          <button class="primary-button" bindtap="openFamily">创建或加入家庭</button>
+        </view>
+
+        <block wx:elif="{{messages.length === 0 && queuedMessages.length === 0 && !sending}}">
+          <view class="welcome-block">
+            <text class="eyebrow">家庭物品助手</text>
+            <text class="welcome-title">想找什么，直接问我</text>
+            <text class="welcome-copy">我会依据当前库存回答，也能帮你添加、移动、修改或删除记录。</text>
+          </view>
+          <view class="suggestions">
+            <view
+              wx:for="{{suggestions}}"
+              wx:key="*this"
+              class="suggestion"
+              data-text="{{item}}"
+              bindtap="useSuggestion"
+              hover-class="tap-active"
+            >
+              <text>{{item}}</text>
+              <text class="suggestion-arrow">↗</text>
+            </view>
+          </view>
+        </block>
+
+        <view wx:else class="messages">
+          <view
+            wx:for="{{messages}}"
+            wx:key="id"
+            id="{{item.id}}"
+            class="message-row {{item.role}}"
+          >
+            <view class="message-bubble">
+              <text class="message-content" user-select>{{item.content}}</text>
+              <view wx:if="{{item.changeSummary}}" class="change-summary">
+                <text>库存已更新 </text>
+                <text
+                  wx:for="{{item.changeTokens}}"
+                  wx:key="text"
+                  class="change-token {{item.tone}}"
+                >{{item.text}}</text>
+              </view>
+            </view>
+          </view>
+          <view wx:if="{{sending}}" class="message-row assistant">
+            <view class="message-bubble thinking">
+              <view class="thinking-dot"></view>
+              <view class="thinking-dot"></view>
+              <view class="thinking-dot"></view>
+            </view>
+          </view>
+          <view
+            wx:for="{{queuedMessages}}"
+            wx:key="id"
+            id="{{item.id}}"
+            class="message-row user queued"
+          >
+            <view class="message-bubble">
+              <text class="message-content" user-select>{{item.content}}</text>
+            </view>
+          </view>
+        </view>
+        <view id="chat-bottom" class="chat-bottom"></view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view
+    wx:if="{{familyId}}"
+    id="composer-wrap"
+    class="composer-wrap"
+    style="bottom: {{composerBottom}}px;"
+    catchtouchmove="preventAreaMove"
+  >
+    <view class="composer">
+      <textarea
+        class="composer-input"
+        value="{{inputValue}}"
+        style="height: {{inputHeight}}rpx;"
+        placeholder="问物品在哪，或告诉我怎么改…"
+        placeholder-class="composer-placeholder"
+        fixed="{{true}}"
+        adjust-position="{{false}}"
+        hold-keyboard="{{true}}"
+        cursor-spacing="12"
+        disable-default-padding="{{true}}"
+        maxlength="500"
+        confirm-type="send"
+        show-confirm-bar="{{false}}"
+        bindinput="handleInput"
+        bindlinechange="handleInputLineChange"
+        bindfocus="handleInputFocus"
+        bindblur="handleInputBlur"
+        bindkeyboardheightchange="handleKeyboardHeightChange"
+        bindconfirm="sendMessage"
+      ></textarea>
+      <button
+        class="send-button {{inputValue ? 'ready' : ''}}"
+        disabled="{{!inputValue}}"
+        bindtap="sendMessage"
+        aria-label="发送"
+      >↑</button>
+    </view>
+  </view>
+</view>

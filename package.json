@@ -1,0 +1,21 @@
+{
+  "name": "belong-miniprogram",
+  "version": "1.0.0",
+  "description": "多人共享家庭物品位置的微信小程序",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "server:dev": "npm --prefix server run dev",
+    "server:build": "npm --prefix server run build",
+    "dev:create-family": "npm --prefix server run dev:create-family --",
+    "test": "npm --prefix server test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "miniprogram-api-typings": "^2.8.3-1",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.DS_Store
+
+# Local secrets and runtime data
+server/.env
+server/data/
+/data/
+
+# WeChat developer-tool output
+miniprogram/miniprogram_npm/

@@ -1,0 +1,86 @@
+<navigation-bar title="库存" color="#1f2321" background="#f5f5f3"></navigation-bar>
+
+<scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+  <view wx:if="{{loading}}" class="loading-state">
+    <view class="loading-line wide"></view>
+    <view class="loading-line"></view>
+    <view class="loading-card"></view>
+    <view class="loading-card"></view>
+  </view>
+
+  <view wx:elif="{{!familyId}}" class="empty-state">
+    <text class="empty-title">还没有可查看的库存</text>
+    <text class="empty-copy">先创建或加入一个家庭。</text>
+    <button class="primary-button" bindtap="openFamily">前往家庭设置</button>
+  </view>
+
+  <view wx:else class="content safe-bottom">
+    <view class="inventory-heading">
+      <text class="eyebrow">{{rootTitle}}</text>
+      <text class="heading-title">所有物品，一目了然</text>
+      <view class="stats">
+        <text>{{itemCount}} 件物品</text>
+        <view class="stat-divider"></view>
+        <text>{{allLocations.length}} 个位置</text>
+        <block wx:if="{{versionLabel}}">
+          <view class="stat-divider"></view>
+          <text>版本 {{versionLabel}}</text>
+        </block>
+      </view>
+    </view>
+
+    <view class="search-box">
+      <text class="search-icon">⌕</text>
+      <input
+        class="search-input"
+        value="{{keyword}}"
+        placeholder="搜索物品或位置"
+        placeholder-class="search-placeholder"
+        confirm-type="search"
+        bindinput="handleSearch"
+      />
+      <text wx:if="{{keyword}}" class="clear-button" bindtap="clearSearch">清除</text>
+    </view>
+
+    <view wx:if="{{allLocations.length === 0}}" class="empty-inventory">
+      <text class="empty-title">库存还是空的</text>
+      <text class="empty-copy">回到对话页，直接告诉助手物品放在哪里。</text>
+    </view>
+
+    <view wx:elif="{{locations.length === 0}}" class="empty-inventory">
+      <text class="empty-title">没有找到相关记录</text>
+      <text class="empty-copy">试试物品的简称，或换一个位置名称。</text>
+    </view>
+
+    <view wx:else class="location-list">
+      <view
+        wx:for="{{locations}}"
+        wx:key="key"
+        wx:for-item="location"
+        class="location-card level-{{location.level}}"
+      >
+        <view class="location-header">
+          <view class="location-title-wrap">
+            <view class="location-pin"></view>
+            <text class="location-title">{{location.title}}</text>
+          </view>
+          <text class="item-count">{{location.items.length}} 件</text>
+        </view>
+        <text class="breadcrumb">{{location.pathText}}</text>
+        <text wx:if="{{location.description}}" class="description" user-select>{{location.description}}</text>
+        <view wx:if="{{location.items.length}}" class="item-list">
+          <view
+            wx:for="{{location.items}}"
+            wx:key="index"
+            wx:for-item="product"
+            class="inventory-item"
+          >
+            <view class="item-bullet"></view>
+            <text user-select>{{product}}</text>
+          </view>
+        </view>
+        <text wx:else class="no-items">暂无直接存放的物品</text>
+      </view>
+    </view>
+  </view>
+</scroll-view>
