@@ -6,6 +6,7 @@
     "typecheck": "tsc --noEmit",
     "server:dev": "npm --prefix server run dev",
     "server:build": "npm --prefix server run build",
+    "server:start": "npm --prefix server start",
     "dev:create-family": "npm --prefix server run dev:create-family --",
     "test": "npm --prefix server test"
   },

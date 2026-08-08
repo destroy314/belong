@@ -87,6 +87,7 @@ export interface MetadataGateway {
     content: string;
   }): unknown;
   deleteChatMessagesBefore(cutoff: number): number | void;
+  purgeExpiredSessions(now?: number): number | void;
   clearChatMessagesForUser(familyId: string, userId: string): number | void;
 }
 
@@ -685,7 +686,6 @@ async function handleRequest(
       config.dayTimezoneOffsetMinutes,
       config.dayBoundaryHour,
     );
-    metadata.deleteChatMessagesBefore(cutoff);
     const history: AgentHistoryMessage[] = metadata
       .listChatMessages(chatFamilyId, user.id, config.chatHistoryLimit, cutoff)
       .filter((item) => chatTimestampMs(item.createdAt) >= cutoff)
@@ -733,6 +733,7 @@ export function startDailyChatCleanup(
     const now = Date.now();
     const cutoff = startOfSessionDayMs(now, timezoneOffsetMinutes, boundaryHour);
     metadata.deleteChatMessagesBefore(cutoff);
+    metadata.purgeExpiredSessions();
     const nextBoundary = cutoff + 86_400_000;
     timer = setTimeout(() => {
       schedule();
